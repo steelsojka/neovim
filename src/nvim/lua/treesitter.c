@@ -44,6 +44,7 @@ static struct luaL_Reg parser_meta[] = {
   { "tree", parser_tree },
   { "set_included_ranges", parser_set_ranges },
   { "included_ranges", parser_get_ranges },
+  { "set_language", parser_set_lang },
   { NULL, NULL }
 };
 
@@ -428,6 +429,28 @@ static int parser_edit(lua_State *L)
                        start_point, old_end_point, new_end_point };
 
   ts_tree_edit(p->tree, &edit);
+
+  return 0;
+}
+
+static int parser_set_lang(lua_State *L)
+{
+  if (lua_gettop(L) < 1) {
+    return luaL_error(
+        L,
+        "not enough args to parser:set_language()");
+  }
+
+  const char *lang_name = lua_tostring(L, 1);
+  TSLanguage *lang = pmap_get(cstr_t)(langs, lang_name);
+
+  if (!lang) {
+    return  luaL_error(L, "no such language: %s", lang_name);
+  }
+
+  TSLua_parser *p = parser_check(L);
+
+  ts_parser_set_language(p->parser, lang);
 
   return 0;
 }
